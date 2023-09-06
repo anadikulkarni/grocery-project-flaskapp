@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Register</title>
+</head>
+<body>
+   <h1> Register New User </h1>
+   <form action="{{ url_for('register') }}" method="post">
+    {{ form.hidden_tag() }}
+    <div>
+        {{form.username.label}} <br> 
+        {{form.username()}}
+    </div>
+    <div>
+        {{form.password.label}} <br> 
+        {{form.password()}}
+    </div>
+    <div>
+        <button type="submit">
+            Register
+        </button>
+    </div>
+   </form> 
+</body>
+</html>

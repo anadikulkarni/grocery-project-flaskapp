@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Dashboard</title>
+    <style>
+        #overlay{
+            display: none;
+        }
+        #add-product-overlay{
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1> Manager Dashboard </h1>
+    <div id="categories-container">
+        {% for category in categories %}
+        <div>
+            <h2> {{category.name}} </h2>
+            <button id="openProductPopup">
+                Add Product      
+            </button>
+            <button> Edit </button>
+            <button> Delete </button>
+        </div>
+        {% endfor %}
+    </div>
+    <div id="add-product-overlay">
+    <div id="add-product-popup">
+        <h3> Add Product </h3>
+        <form id="add-product-form">
+            <input type="text" name="Product Name" placeholder="grocery item" required>
+            <select name="Unit" required> 
+                <option value=""> Select a Unit: </option>
+                <option value="kg"> kilogram </option>
+                <option value="L"> litre </option>
+                <option value="dz"> dozen </option>
+                <option value="g"> gram </option>
+            </select>
+            <input type="number" name="Rate/Unit" placeholder="Rs:" required>
+            <input type="number" name="Quantity" placeholder="number of items" required>
+            <button type="button" id="addProductSubmit" onclick="saveProduct()"> Submit </button>
+        </form>
+    </div>
+    </div>
+    <button id="add_cat"> Create Category </button>
+    <div id="overlay">
+        <div id="popup">
+            <input type="text" id="cat_name" placeholder="category name">
+            <button id="save_cat">
+                Save
+            </button>
+        </div>
+    </div>
+    <button>
+        <a href="{{url_for('logout')}}"> Logout </a>
+    </button>
+    <script>
+        function show_popup(){
+            document.getElementById("overlay").style.display = 'block';
+        }
+        function hide_popup(){
+            document.getElementById("overlay").style.display = 'none';
+        }
+        function show_popup_product(){
+            document.getElementById("add-product-overlay").style.display = 'block';
+        }
+        function hide_popup_product(){
+            document.getElementById("add-product-overlay").style.display = 'none';
+        }
+        function save_category(){
+            const categoryName = document.getElementById("cat_name").value;
+            const xhttp = new XMLHttpRequest();
+            xhttp.open('POST', 'http://127.0.0.1:5000/save_category', true);
+            xhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+            xhttp.onload = function(){
+                if(this.status == 200){
+                    const response = JSON.parse(this.responseText);
+                    alert(response.message);
+                }
+                else{
+                    alert("An error occurred!");
+                }
+                hide_popup();
+            };
+            xhttp.send(JSON.stringify({'categoryName':categoryName}));
+        }
+        document.getElementById('add_cat').addEventListener('click',show_popup);
+        document.getElementById('save_cat').addEventListener('click', save_category);
+
+        document.getElementById('openProductPopup').addEventListener('click',show_popup_product);
+        document.getElementById('addProductSubmit').addEventListener('click', hide_popup_product);
+    </script>
+</body>
+</html>
