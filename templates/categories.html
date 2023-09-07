@@ -17,12 +17,12 @@
     <h1> Manager Dashboard </h1>
     <div id="categories-container">
         {% for category in categories %}
-        <div>
+        <div id="{{category.id}}">
             <h2> {{category.name}} </h2>
-            <button id="openProductPopup">
+            <button onclick="show_popup_product('{{category.name}}')">
                 Add Product      
             </button>
-            <button> Edit </button>
+            <button onclick="editProduct('{{category.id}}','{{category.name}}')"> Edit </button>
             <button> Delete </button>
         </div>
         {% endfor %}
@@ -31,16 +31,17 @@
     <div id="add-product-popup">
         <h3> Add Product </h3>
         <form id="add-product-form">
-            <input type="text" name="Product Name" placeholder="grocery item" required>
-            <select name="Unit" required> 
+            <input type="hidden" id="category-name-hidden" name="category name">
+            <input type="text" name="Product Name" placeholder="grocery item" required id="productName">
+            <select name="Unit" required id="unit"> 
                 <option value=""> Select a Unit: </option>
                 <option value="kg"> kilogram </option>
                 <option value="L"> litre </option>
                 <option value="dz"> dozen </option>
                 <option value="g"> gram </option>
             </select>
-            <input type="number" name="Rate/Unit" placeholder="Rs:" required>
-            <input type="number" name="Quantity" placeholder="number of items" required>
+            <input type="number" name="Rate/Unit" placeholder="Rs:" required id="rate-unit">
+            <input type="number" name="Quantity" placeholder="number of items" required id="quantity">
             <button type="button" id="addProductSubmit" onclick="saveProduct()"> Submit </button>
         </form>
     </div>
@@ -58,13 +59,16 @@
         <a href="{{url_for('logout')}}"> Logout </a>
     </button>
     <script>
+        var saveCategoryURL = "{{url_for('save_category')}}";
+        var saveProductURL = "{{url_for('save_product')}}";
         function show_popup(){
             document.getElementById("overlay").style.display = 'block';
         }
         function hide_popup(){
             document.getElementById("overlay").style.display = 'none';
         }
-        function show_popup_product(){
+        function show_popup_product(categoryName){
+            document.getElementById('category-name-hidden').value = categoryName;
             document.getElementById("add-product-overlay").style.display = 'block';
         }
         function hide_popup_product(){
@@ -73,7 +77,7 @@
         function save_category(){
             const categoryName = document.getElementById("cat_name").value;
             const xhttp = new XMLHttpRequest();
-            xhttp.open('POST', 'http://127.0.0.1:5000/save_category', true);
+            xhttp.open('POST', saveCategoryURL, true);
             xhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
             xhttp.onload = function(){
                 if(this.status == 200){
@@ -86,6 +90,36 @@
                 hide_popup();
             };
             xhttp.send(JSON.stringify({'categoryName':categoryName}));
+        }
+        function saveProduct(){
+            const productName = document.getElementById('productName').value;
+            const unit = document.getElementById('unit').value;
+            const rateUnit = document.getElementById('rate-unit').value;
+            const quantity = document.getElementById('quantity').value;
+            const categoryName = document.getElementById('category-name-hidden').value; 
+            const xhttp = new XMLHttpRequest();
+            xhttp.open('POST', saveProductURL, true);
+            xhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+            xhttp.onload = function(){
+                if(this.status == 200){
+                    const response = JSON.parse(this.responseText);
+                    alert(response.message);
+                }
+                else{
+                    alert("An error occurred!");
+                }
+                hide_popup_product();
+            };
+            xhttp.send(JSON.stringify({
+                'categoryName':categoryName,
+                'productName': productName,
+                'rateUnit': rateUnit,
+                'quantity': quantity,
+                'unit': unit}));
+        }
+        function editProduct(categoryID, categoryName){
+            document.getElementById('category-name-hidden').value = categoryName;
+            show_popup_product
         }
         document.getElementById('add_cat').addEventListener('click',show_popup);
         document.getElementById('save_cat').addEventListener('click', save_category);

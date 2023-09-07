@@ -37,6 +37,14 @@ class Category(db.Model):
     def __init__(self, name):
         self.name = name
 
+class Product(db.Model):
+    id = db.Column(db.Integer, primary_key = True, autoincrement=True)
+    categoryName = db.Column(db.String(100), nullable = False)
+    productName = db.Column(db.String(100), nullable = False)
+    unit = db.Column(db.String(100), nullable = False)
+    rateUnit = db.Column(db.Float, nullable = False)
+    quantity = db.Column(db.Integer, nullable = False)
+
 class Manager(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key = True)
     username = db.Column(db.String(20), unique = True, nullable = False)
@@ -140,6 +148,34 @@ def save_category():
         print(e)
         return jsonify({'status':'error',
                         'message':f'an error occurred: {str(e)}'})
+        
+@app.route('/save_product', methods=['POST'])
+def save_product():
+    data = request.json
+    categoryName = data.get("categoryName")
+    productName = data.get("productName")
+    unit = data.get("unit")
+    rateUnit = data.get("rateUnit")
+    quantity = data.get("quantity")
+    if not productName:
+        return jsonify({'status': 'error',
+                        'message': 'product name is required'})
+    new_product = Product(categoryName=categoryName, productName=productName, unit=unit, rateUnit=rateUnit, quantity=quantity)
+    try:
+        db.session.add(new_product)
+        db.session.commit()
+        return jsonify({'status':'success',
+                        'message':'product saved successfully'})
+    except Exception as e:
+        print(e)
+        return jsonify({'status':'error',
+                        'message':f'an error occurred: {str(e)}'})
+        
+@app.route('/products')
+def products():
+    products = Product.query.all()
+    return render_template('products.html', products=products)
+    
   
 if __name__ == "__main__":
     app.run(debug=True)
