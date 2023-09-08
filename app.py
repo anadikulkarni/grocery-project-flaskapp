@@ -34,16 +34,17 @@ class User(db.Model, UserMixin):
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key = True, autoincrement=True)
     name = db.Column(db.String(100), unique = True, nullable = False)
+    products = db.relationship("Product", backref="category", lazy=True)
     def __init__(self, name):
         self.name = name
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key = True, autoincrement=True)
-    categoryName = db.Column(db.String(100), nullable = False)
     productName = db.Column(db.String(100), nullable = False)
     unit = db.Column(db.String(100), nullable = False)
     rateUnit = db.Column(db.Float, nullable = False)
     quantity = db.Column(db.Integer, nullable = False)
+    categoryid = db.Column(db.Integer, db.ForeignKey("category.id"), nullable = False)
 
 class Manager(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key = True)
@@ -137,7 +138,7 @@ def save_category():
     categoryName = data.get("categoryName")
     if not categoryName:
         return jsonify({'status': 'error',
-                        'message': 'category name is required'})
+                        'message': 'category name is required'}), 400
     new_category = Category(name=categoryName)
     try:
         db.session.add(new_category)
@@ -147,20 +148,20 @@ def save_category():
     except Exception as e:
         print(e)
         return jsonify({'status':'error',
-                        'message':f'an error occurred: {str(e)}'})
+                        'message':f'an error occurred: {str(e)}'}), 500
         
 @app.route('/save_product', methods=['POST'])
 def save_product():
     data = request.json
-    categoryName = data.get("categoryName")
+    categoryid = data.get("categoryid")
     productName = data.get("productName")
     unit = data.get("unit")
     rateUnit = data.get("rateUnit")
     quantity = data.get("quantity")
     if not productName:
         return jsonify({'status': 'error',
-                        'message': 'product name is required'})
-    new_product = Product(categoryName=categoryName, productName=productName, unit=unit, rateUnit=rateUnit, quantity=quantity)
+                        'message': 'product name is required'}), 400
+    new_product = Product(categoryid=categoryid, productName=productName, unit=unit, rateUnit=rateUnit, quantity=quantity)
     try:
         db.session.add(new_product)
         db.session.commit()
@@ -169,12 +170,52 @@ def save_product():
     except Exception as e:
         print(e)
         return jsonify({'status':'error',
-                        'message':f'an error occurred: {str(e)}'})
+                        'message':f'an error occurred: {str(e)}'}), 500
         
 @app.route('/products')
 def products():
     products = Product.query.all()
+    category = Category.query.first()
+    print(category)
+    productOfCategory = category.products
+    print(productOfCategory)
     return render_template('products.html', products=products)
+
+@app.route('/update_category', methods=['POST'])
+def update_category():
+    data = request.json
+    categoryID = data.get("categoryID")
+    categoryName = data.get("categoryName")
+    try:
+        category = Category.query.get(categoryID)
+        if not category:
+            return jsonify({'message': 'category not found'}), 404
+        category.name = categoryName
+        db.session.commit()
+        return jsonify({'status':'success',
+                        'message':'category saved successfully'})
+    except Exception as e:
+        print(e)
+        return jsonify({'status':'error',
+                        'message':f'an error occurred: {str(e)}'}), 500
+        
+@app.route('/delete_category', methods=['POST'])
+def delete_category():
+    data = request.json
+    categoryID = data.get("categoryID")
+    try:
+        category = Category.query.get(categoryID)
+        if not category:
+            return jsonify({'message': 'category not found'}), 404
+        db.session.delete(category)
+        db.session.commit()
+        return jsonify({'status':'success',
+                        'message':'category deleted successfully'})
+    except Exception as e:
+        print(e)
+        return jsonify({'status':'error',
+                        'message':f'an error occurred: {str(e)}'}), 500
+    
     
   
 if __name__ == "__main__":

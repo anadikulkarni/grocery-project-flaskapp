@@ -11,19 +11,31 @@
         #add-product-overlay{
             display: none;
         }
+        #edit-category-overlay{
+            display: none;
+        }
     </style>
 </head>
 <body>
     <h1> Manager Dashboard </h1>
     <div id="categories-container">
         {% for category in categories %}
-        <div id="{{category.id}}">
+        <div id="{{category.id}}" class="category-div">
             <h2> {{category.name}} </h2>
+            <div class="products-container">
+                {% for product in category.products %}
+                <div class="product-div" id="product-{{product.id}}">
+                    <span> {{product.name}} </span>
+                    <button> Edit </button>
+                    <button> Delete </button>
+                </div>
+                {% endfor %}
+            </div>
             <button onclick="show_popup_product('{{category.name}}')">
                 Add Product      
             </button>
-            <button onclick="editProduct('{{category.id}}','{{category.name}}')"> Edit </button>
-            <button> Delete </button>
+            <button onclick="showEditCategoryPopup('{{category.id}}','{{category.name}}')"> Edit </button>
+            <button onclick="deleteCategory('{{category.id}}')"> Delete </button>
         </div>
         {% endfor %}
     </div>
@@ -31,7 +43,7 @@
     <div id="add-product-popup">
         <h3> Add Product </h3>
         <form id="add-product-form">
-            <input type="hidden" id="category-name-hidden" name="category name">
+            <input type="hidden" id="category-id-hidden" name="categoryID">
             <input type="text" name="Product Name" placeholder="grocery item" required id="productName">
             <select name="Unit" required id="unit"> 
                 <option value=""> Select a Unit: </option>
@@ -55,20 +67,31 @@
             </button>
         </div>
     </div>
+    <div id="edit-category-overlay">
+        <div id="edit-category-popup">
+            <input type="hidden" id="edit-category-id-hidden">
+            <input type="text" id="edit-categoryName" placeholder="change category name">
+            <button id="category-update-button">
+                Update
+            </button>
+        </div>
+    </div>
     <button>
         <a href="{{url_for('logout')}}"> Logout </a>
     </button>
     <script>
         var saveCategoryURL = "{{url_for('save_category')}}";
         var saveProductURL = "{{url_for('save_product')}}";
+        var updateCategoryURL = "{{url_for('update_category')}}";
+        var deleteCategoryURL = "{{url_for('delete_category')}}";
         function show_popup(){
             document.getElementById("overlay").style.display = 'block';
         }
         function hide_popup(){
             document.getElementById("overlay").style.display = 'none';
         }
-        function show_popup_product(categoryName){
-            document.getElementById('category-name-hidden').value = categoryName;
+        function show_popup_product(categoryID){
+            document.getElementById('category-id-hidden').value = categoryID;
             document.getElementById("add-product-overlay").style.display = 'block';
         }
         function hide_popup_product(){
@@ -96,7 +119,7 @@
             const unit = document.getElementById('unit').value;
             const rateUnit = document.getElementById('rate-unit').value;
             const quantity = document.getElementById('quantity').value;
-            const categoryName = document.getElementById('category-name-hidden').value; 
+            const categoryID = document.getElementById('category-id-hidden').value; 
             const xhttp = new XMLHttpRequest();
             xhttp.open('POST', saveProductURL, true);
             xhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
@@ -111,21 +134,61 @@
                 hide_popup_product();
             };
             xhttp.send(JSON.stringify({
-                'categoryName':categoryName,
+                'categoryid':categoryID,
                 'productName': productName,
                 'rateUnit': rateUnit,
                 'quantity': quantity,
                 'unit': unit}));
         }
-        function editProduct(categoryID, categoryName){
-            document.getElementById('category-name-hidden').value = categoryName;
-            show_popup_product
+        function showEditCategoryPopup(categoryID, categoryName){
+            document.getElementById('edit-category-id-hidden').value = categoryID;
+            document.getElementById('edit-categoryName').value = categoryName;
+            document.getElementById('edit-category-overlay').style.display = 'block';
+        }
+        function hideEditCategoryPopup(){
+            document.getElementById('edit-category-overlay').style.display = 'none';
+        }
+        function updateCategory(){
+            const categoryID = document.getElementById('edit-category-id-hidden').value;
+            const updatedCategoryName = document.getElementById('edit-categoryName').value;
+            const xhttp = new XMLHttpRequest();
+            xhttp.open('POST', updateCategoryURL, true);
+            xhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+            xhttp.onload = function(){
+                if(this.status == 200){
+                    const response = JSON.parse(this.responseText);
+                    alert(response.message);
+                }
+                else{
+                    alert("An error occurred!");
+                }         hideEditCategoryPopup();
+        }; 
+        xhttp.send(JSON.stringify({'categoryID':categoryID, 'categoryName':updatedCategoryName}));
+    }
+        function deleteCategory(categoryID){
+            if(confirm('Are you sure you want to delete this category?')){
+                const xhttp = new XMLHttpRequest();
+                xhttp.open('POST', deleteCategoryURL, true);
+                xhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+                xhttp.onload = function(){
+                    if(this.status == 200){
+                        const response = JSON.parse(this.responseText);
+                        alert(response.message);
+                    }
+                    else{
+                        alert("An error occurred!");
+                    }         
+            }; 
+            xhttp.send(JSON.stringify({'categoryID':categoryID}));
+            }
         }
         document.getElementById('add_cat').addEventListener('click',show_popup);
         document.getElementById('save_cat').addEventListener('click', save_category);
 
-        document.getElementById('openProductPopup').addEventListener('click',show_popup_product);
+        document.getElementById('add-product-overlay').addEventListener('click',show_popup_product);
         document.getElementById('addProductSubmit').addEventListener('click', hide_popup_product);
+
+        document.getElementById('category-update-button').addEventListener('click', updateCategory);
     </script>
 </body>
 </html>
