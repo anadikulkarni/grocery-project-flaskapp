@@ -4,18 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Index Page </title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair:opsz,wght@5..1200,300&display=swap" rel="stylesheet"> 
+    <style>
+        body {
+            text-align: center;
+            margin-top: 50px;
+            font-family: 'Playfair', serif;
+        }
+        .button {
+            background-color: #008CBA;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            margin: 4px 2px;
+            cursor: pointer;
+            font-size: 16px;
+            font-family: 'Playfair', serif;
+        }
+        img {
+            max-width: 400px;
+        }
+    </style>
 </head>
-<body>
-    <h1> Welcome to the Grocery Store! </h1>
+<body class="playfair">
+    <h1> Welcome to the Grocery Store </h1>
+    <img src="https://www.bigbasketco.com/wp-content/uploads/good-l-corp-what-americas-best-grocery-stores-have-in-common-1024x768.jpg" alt="Grocery Store">
+    <br>  <br>  
+    <a class="button" href="{{url_for('register')}}"> Register </a>
+    <a class="button" href="{{url_for('login')}}"> Login </a>
+    <a class="button" href="{{url_for('manager_login')}}"> Manager Login </a>
 
-    <button>
-        <a href="{{url_for('register')}}"> Register </a>
-    </button>
-    <button>
-       <a href="{{url_for('login')}}"> Login </a>
-    </button>
-    <button>
-        <a href="{{url_for('manager_login')}}"> Manager Login </a>
-    </button>
+
 </body>
 </html>

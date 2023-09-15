@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Dashboard </title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair:opsz,wght@5..1200,300&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Playfair', serif;
+            padding-top: 60px;
+        }
+        .popup{
+            display: none;
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+            font-family: 'Playfair', serif;
+        }
+        .navbar-left, .navbar-right {
+            display: flex;
+            align-items: center;
+        }
+        #manager-username {
+            margin-right: 20px;
+            font-weight: bold;
+        }
+        .navbar button {
+            margin-left: 10px;
+            padding: 5px 15px;
+            background-color: #999;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-family: 'Playfair', serif;
+        }
+        .navbar button:hover {
+            background-color: #777;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            font-family: Arial, sans-serif;
+        }
+        .category-block {
+            background-color: #e6f7ff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            font-family: 'Playfair', serif;
+        }
+        .product-block {
+            background-color: #fffae6;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            font-family: 'Playfair', serif;
+        }
+        .product-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Playfair', serif;
+        }
+        .product-price {
+            margin-left: 10px;
+            color: #444;
+            font-weight: bold;
+            font-family: 'Playfair', serif;
+        }
+        .product-actions {
+            display: flex;
+            justify-content: right;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .buy-btn, .cart-btn {
+            padding: 5px 15px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-family: 'Playfair', serif;
+        }
+        .buy-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .cart-btn {
+            background-color: #FFC107;
+            color: white;
+        }
+        .popup {
+            display: none;
+            position: fixed; 
+            top: 0; 
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+        }
+        .popup-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            width: 300px;
+            border-radius: 5px;
+        }
+        .close-btn {
+            cursor: pointer;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            font-family: 'Playfair', serif;
+        }
+        .popup-input, .popup-price {
+            margin: 20px 0;
+        }
+        #manager-username {
+            margin-right: 20px;
+            font-weight: bold;
+            font-family: 'Playfair', serif;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <span id="username"> {{user.username}}'s Dashboard </span>
+        </div>
+        <div class="navbar-right">
+            <button> <a href="{{url_for('cart')}}"> Cart </a> </button>
+            <button> <a href="{{url_for('logout')}}"> Logout </a> </button>
+        </div>
+    </nav>
+    <div class="container">
+        {% for category in categories %}
+        <div class="category-block">
+            <h2> {{category.name}} </h2>
+            {% for product in category.products %}
+            <div class="product-block">
+                <div class="product-info">
+                    <span> {{product.productName}} </span>
+                    <span class="product-price"> {{product.rateUnit}}/{{product.unit}} </span>
+                </div>
+                <div class="product-actions">
+                    {% if product.quantity > 0 %}
+                    <button class="buy-btn" onclick="showBuyPopup('{{product.rateUnit}}','{{product.id}}')"> Buy </button>
+                    <button class="cart-btn" onclick="showCartPopup('{{product.rateUnit}}','{{product.id}}')"> Add to Cart</button>
+                    {% else %}
+                    <label class="out-of-stock"> Out of Stock</label>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    <div id="buy-popup" class="popup">
+        <div class="popup-content">
+            <input type="hidden" id="product-id-hidden">
+            <input type="hidden" id="user-id-hidden" value="{{user.id}}">
+            <h3> Buy a Product </h3>
+            <div class="popup-input">
+                <label for="product-quantity"> Quantity: </label>
+                <input type="number" id="product-quantity" value="1" onchange="updateTotalPrice()">
+            </div>
+            <div class="popup-price">
+                Total Price: &#8377;<span id="total-price">0</span>
+            </div>
+            <button onclick="finalizePurchase()"> Buy </button>
+        </div>
+    </div>
+    <div id="add-to-cart-popup" class="popup">
+        <div class="popup-content">
+            <input type="hidden" id="add-to-cart-product-id-hidden">
+            <input type="hidden" id="add-to-cart-user-id-hidden" value="{{user.id}}">
+            <h3> Add to Cart </h3>
+            <div class="popup-input">
+                <label for="product-quantity"> Quantity: </label>
+                <input type="number" id="add-to-cart-product-quantity" value="1" onchange="addToCartUpdateTotalPrice()">
+            </div>
+            <div class="popup-price">
+                Total Price: &#8377;<span id="add-to-cart-total-price">0</span>
+            </div>
+            <button onclick="finalizeAddToCart()"> Add to Cart </button>
+        </div>
+    </div>
+    <script>
+        var purchaseProductURL = "{{url_for('purchase_product')}}"
+        var cartProductURL = "{{url_for('add_to_cart_product')}}"
+        let currentProductPrice = 0;
+        function showBuyPopup(price, productid){
+            const popup = document.getElementById('buy-popup');
+            const quantityInput = document.getElementById('product-quantity');
+            const totalPrice = document.getElementById('total-price');
+            document.getElementById('product-id-hidden').value = productid;
+            currentProductPrice = price;
+            quantityInput.value = 1;
+            totalPrice.textContent = price;
+            popup.style.display = 'block';
+        }
+        function closeBuyPopup(){
+            document.getElementById('buy-popup').style.display = 'none';
+        }
+        function updateTotalPrice(){
+            const quantity = document.getElementById('product-quantity').value;
+            const totalPrice = currentProductPrice*quantity;
+            document.getElementById('total-price').textContent = totalPrice.toFixed(2);
+        }
+        function finalizePurchase(){
+            productID = document.getElementById('product-id-hidden').value;
+            quantity = document.getElementById('product-quantity').value;
+            userID = document.getElementById('user-id-hidden').value;
+            const xhttp = new XMLHttpRequest();
+            xhttp.open('POST', purchaseProductURL, true);
+            xhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+            xhttp.onload = function(){
+                if(this.status == 200){
+                    const response = JSON.parse(this.responseText);
+                    alert(response.message);
+                    window.location.reload();
+                }
+                else{
+                    alert("An error occurred!");
+                }
+                closeBuyPopup();
+            };
+            xhttp.send(JSON.stringify({'productID':productID,
+                                        'quantity': quantity,
+                                        'userID': userID}));
+        }
+        function showCartPopup(price, productid){
+            const popup = document.getElementById('add-to-cart-popup');
+            const quantityInput = document.getElementById('add-to-cart-product-quantity');
+            const totalPrice = document.getElementById('add-to-cart-total-price');
+            document.getElementById('add-to-cart-product-id-hidden').value = productid;
+            currentProductPrice = price;
+            quantityInput.value = 1;
+            totalPrice.textContent = price;
+            popup.style.display = 'block';
+        }
+        function addToCartUpdateTotalPrice(){
+            const quantity = document.getElementById('add-to-cart-product-quantity').value;
+            const totalPrice = currentProductPrice*quantity;
+            document.getElementById('add-to-cart-total-price').textContent = totalPrice.toFixed(2);
+        }
+        function closeCartPopup(){
+            document.getElementById('add-to-cart-popup').style.display = 'none';
+        }
+        function finalizeAddToCart(){
+            productID = document.getElementById('add-to-cart-product-id-hidden').value;
+            quantity = document.getElementById('add-to-cart-product-quantity').value;
+            userID = document.getElementById('add-to-cart-user-id-hidden').value;
+            const xhttp = new XMLHttpRequest();
+            xhttp.open('POST', cartProductURL, true);
+            xhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+            xhttp.onload = function(){
+                if(this.status == 200){
+                    const response = JSON.parse(this.responseText);
+                    alert(response.message);
+                    window.location.reload();
+                }
+                else{
+                    alert("An error occurred!");
+                }
+                closeCartPopup();
+            };
+            xhttp.send(JSON.stringify({'productID':productID,
+                                        'quantity': quantity, 'userID': userID}));
+        }
+    </script>
+</body>
+</html>

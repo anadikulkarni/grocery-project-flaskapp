@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Summary</title>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair:opsz,wght@5..1200,300&display=swap" rel="stylesheet">
+    <style>
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+            font-family: 'Playfair', serif;
+        }
+        body {
+            font-family: 'Playfair', serif;
+        }
+        .navbar-left, .navbar-right {
+            display: flex;
+            align-items: center;
+        }
+        #manager-username {
+            margin-right: 20px;
+            font-weight: bold;
+        }
+        .navbar button {
+            margin-left: 10px;
+            padding: 5px 15px;
+            background-color: #999;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-family: 'Playfair', serif;
+        }
+        .navbar button:hover {
+            background-color: #777;
+        }
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        #purchasesChart, #earningsChart, #topSellingProductsChart {
+            width: 100% !important;
+
+            height: auto !important;
+
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <span id="manager-username"> {{manager.username}}'s Dashboard </span>
+        </div>
+        <div class="navbar-right">
+            <button> <a href="{{url_for('categories')}}"> Home </a> </button>
+            <button> <a href="{{url_for('logout')}}"> Logout </a> </button>
+        </div>
+    </nav>
+    <div class="chart-container">
+    <div id="purchases-per-category-chart" style="width: 400px; height: 200px;"> </div> <br>
+    <div id="earnings-chart" style="width: 400px; height: 200px;"></div> <br>
+    <div id="top-products-chart" style="width: 400px; height: 200px;"></div> <br>
+    </div>
+
+<script>
+    google.charts.load('current', {packages: ['corechart']});
+    google.charts.setOnLoadCallback(fetchData);
+    function fetchData(){
+        fetch('/data/purchases_per_category')
+        .then(response => response.json())
+        .then(data => {
+            let dataArray = [['Category','Value']];
+            data.forEach(item => dataArray.push(item));
+            let ledgerData = google.visualization.arrayToDataTable(dataArray);
+            let options = {title: 'Purchases made by Category', legend:'none'}
+            let chart = new google.visualization.BarChart(document.getElementById('purchases-per-category-chart'));
+            chart.draw(ledgerData, options)
+        });
+        fetch('/data/earnings_per_category')
+        .then(response => response.json())
+        .then(data => {
+            let dataArray = [['Category','Value']];
+            data.forEach(item => dataArray.push(item));
+            let ledgerData = google.visualization.arrayToDataTable(dataArray);
+            let options = {title: 'Earnings by Category', legend:'none'}
+            let chart = new google.visualization.PieChart(document.getElementById('earnings-chart'));
+            chart.draw(ledgerData, options)
+        });
+        fetch('/data/top_selling_products')
+        .then(response => response.json())
+        .then(data => {
+            let dataArray = [['Product','Value']];
+            data.forEach(item => dataArray.push(item));
+            let ledgerData = google.visualization.arrayToDataTable(dataArray);
+            let options = {title: 'Top Selling Products', legend:'none'}
+            let chart = new google.visualization.BarChart(document.getElementById('top-products-chart'));
+            chart.draw(ledgerData, options)
+        });
+    }
+
+</script>
+</body>
+</html>
