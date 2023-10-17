@@ -24,6 +24,7 @@ loginmanager.init_app(app)
 
 @loginmanager.user_loader
 def load_user(user_id):
+    print("##"*10 + "found user")
     return User.query.get(int(user_id))
 
 db = SQLAlchemy(app)
